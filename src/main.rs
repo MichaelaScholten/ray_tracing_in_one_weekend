@@ -3,6 +3,11 @@ use std::{
     time::Instant,
 };
 
+use crate::color::{Color, write_color};
+
+pub mod color;
+pub mod vec3;
+
 // Image
 const IMAGE_WIDTH: usize = 4096;
 const IMAGE_HEIGHT: usize = 4096;
@@ -17,10 +22,12 @@ fn main() {
         for y in 0..IMAGE_HEIGHT {
             eprint!("{:02}%\r", y * 100 / IMAGE_HEIGHT);
             for x in 0..IMAGE_WIDTH {
-                let red = (x as f64 / (IMAGE_WIDTH - 1) as f64 * 255.999) as u8;
-                let green = (y as f64 / (IMAGE_HEIGHT - 1) as f64 * 255.999) as u8;
-                let blue = 0;
-                writeln!(out, "{red} {green} {blue}").unwrap();
+                let pixel_color = Color::new([
+                    x as f64 / (IMAGE_WIDTH - 1) as f64,
+                    y as f64 / (IMAGE_HEIGHT - 1) as f64,
+                    0.0,
+                ]);
+                write_color(&mut out, &pixel_color);
             }
         }
     }
