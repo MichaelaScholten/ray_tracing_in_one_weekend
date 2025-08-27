@@ -6,11 +6,13 @@ use std::{
 
 use crate::{
     color::{Color, write_color},
+    hittable::{Hittable, list::List as HittableList, sphere::Sphere},
     ray::Ray,
     vec3::{Point3, Vec3},
 };
 
 pub mod color;
+pub mod hittable;
 pub mod ray;
 pub mod vec3;
 
@@ -32,24 +34,9 @@ const CAMERA_CENTER: Point3 = Point3::new([0.0; 3]);
 const VIEWPORT_U: Vec3 = Vec3::new([VIEWPORT_WIDTH, 0.0, 0.0]);
 const VIEWPORT_V: Vec3 = Vec3::new([0.0, -VIEWPORT_HEIGHT, 0.0]);
 
-fn hit_sphere(center: Point3, radius: f64, ray: &Ray) -> f64 {
-    let origin_center = center - *ray.origin();
-    let a = ray.direction().length_squared();
-    let h = ray.direction().dot(&origin_center);
-    let c = origin_center.length_squared() - radius * radius;
-    let discriminant = h * h - a * c;
-    if discriminant >= 0.0 {
-        (h - discriminant.sqrt()) / a
-    } else {
-        -1.0
-    }
-}
-
-fn ray_color(ray: &Ray) -> Color {
-    let time = hit_sphere(Point3::new([0.0, 0.0, -1.0]), 0.5, ray);
-    if time > 0.0 {
-        let n = (ray.at(time) - Vec3::new([0.0, 0.0, -1.0])).unit_vector();
-        return 0.5 * Color::new([n.x() + 1.0, n.y() + 1.0, n.z() + 1.0]);
+fn ray_color(ray: &Ray, world: &HittableList) -> Color {
+    if let Some(record) = world.hit(ray, 0.0..=f64::INFINITY) {
+        return 0.5 * (*record.normal() + Color::new([1.0; 3]));
     }
     let unit_direction = ray.direction().unit_vector();
     let a = 0.5 * (unit_direction.y() + 1.0);
@@ -70,6 +57,12 @@ fn main() {
             - VIEWPORT_V / 2.0;
         let pixel_origin_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+        let world: Vec<Box<dyn Hittable>> = vec![
+            Box::new(Sphere::new(Point3::new([0.0, 0.0, -1.0]), 0.5)),
+            Box::new(Sphere::new(Point3::new([0.0, -100.5, -1.0]), 100.0)),
+        ];
+        let world = HittableList::from(world);
+
         let mut out = BufWriter::new(stdout().lock());
         writeln!(out, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n").unwrap();
         for y in 0..IMAGE_HEIGHT {
@@ -80,7 +73,7 @@ fn main() {
                 let ray_direction = pixel_center - CAMERA_CENTER;
                 let ray = Ray::new(CAMERA_CENTER, ray_direction);
 
-                let pixel_color = ray_color(&ray);
+                let pixel_color = ray_color(&ray, &world);
                 write_color(&mut out, &pixel_color);
             }
         }
