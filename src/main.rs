@@ -16,15 +16,18 @@ pub mod vec3;
 fn main() {
     let start = Instant::now();
 
-    // Render
     {
+        // Create the world
         let world: Vec<Box<dyn Hittable>> = vec![
             Box::new(Sphere::new(Point3::new([0.0, 0.0, -1.0]), 0.5)),
             Box::new(Sphere::new(Point3::new([0.0, -100.5, -1.0]), 100.0)),
         ];
         let world = HittableList::from(world);
 
+        // Create the camera
         let camera = Camera::new(16.0 / 9.0, 4096);
+
+        // Use the camera to make a picture of the world
         camera.render(&world);
     }
 
