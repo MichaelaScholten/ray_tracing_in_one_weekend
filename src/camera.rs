@@ -3,6 +3,8 @@ use std::{
     io::{BufWriter, Write as _, stdout},
 };
 
+use rand::random;
+
 use crate::{
     color::{Color, write_color},
     hittable::{Hittable as _, list::List as HittableList},
@@ -18,16 +20,18 @@ pub struct Camera {
     pixel_origin_location: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    samples_per_pixel: u8,
+    pixel_samples_scale: f64,
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        Self::new(1.0, 100)
+        Self::new(1.0, 100, 10)
     }
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: usize) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: usize, samples_per_pixel: u8) -> Self {
         let mut image_height = (image_width as f64 / aspect_ratio) as usize;
         if image_height < 1 {
             image_height = 1;
@@ -59,7 +63,28 @@ impl Camera {
             pixel_origin_location,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel,
+            pixel_samples_scale: 1.0 / f64::from(samples_per_pixel),
         }
+    }
+
+    fn sample_square() -> Vec3 {
+        Vec3::new([random::<f64>() - 0.5, random::<f64>() - 0.5, 0.0])
+    }
+
+    fn get_ray(&self, x: usize, y: usize) -> Ray {
+        // Construct a camera ray originating from the origin and directed at randomly sampled
+        // point around the pixel location x, y.
+
+        let offset = Self::sample_square();
+        let pixel_sample = self.pixel_origin_location
+            + (x as f64 + offset.x()) * self.pixel_delta_u
+            + (y as f64 + offset.y()) * self.pixel_delta_v;
+
+        let ray_origin = self.center;
+        let ray_direction = pixel_sample - ray_origin;
+
+        Ray::new(ray_origin, ray_direction)
     }
 
     fn ray_color(ray: &Ray, world: &HittableList) -> Color {
@@ -77,13 +102,10 @@ impl Camera {
         for y in 0..self.image_height {
             eprint!("{:02}%\r", y * 100 / self.image_height);
             for x in 0..self.image_width {
-                let pixel_center = self.pixel_origin_location
-                    + x as f64 * self.pixel_delta_u
-                    + y as f64 * self.pixel_delta_v;
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-
-                let pixel_color = Self::ray_color(&ray, world);
+                let pixel_color = (0..self.samples_per_pixel)
+                    .map(|_| Self::ray_color(&self.get_ray(x, y), world))
+                    .sum::<Color>()
+                    * self.pixel_samples_scale;
                 write_color(&mut out, &pixel_color);
             }
         }

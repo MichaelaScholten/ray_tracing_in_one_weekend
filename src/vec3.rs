@@ -1,8 +1,16 @@
 use std::{
     array,
     fmt::Display,
+    iter::Sum,
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
 };
+
+use rand::{
+    distr::{Distribution, StandardUniform},
+    random_range,
+};
+
+use crate::color::Color;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Vec3([f64; 3]);
@@ -113,9 +121,25 @@ impl Display for Vec3 {
     }
 }
 
+impl Sum for Vec3 {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Color::default(), |result, current| result + current)
+    }
+}
+
+impl Distribution<Vec3> for StandardUniform {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Vec3 {
+        Vec3(array::from_fn(|_| rng.random()))
+    }
+}
+
 impl Vec3 {
     pub const fn new(values: [f64; 3]) -> Self {
         Self(values)
+    }
+
+    pub fn random(min: f64, max: f64) -> Self {
+        Self(array::from_fn(|_| random_range(min..max)))
     }
 
     pub const fn x(&self) -> f64 {
