@@ -29,7 +29,7 @@ impl Hittable for Sphere {
         let mut root = (h - sqrt_discriminant) / a;
         if !ray_time.surrounds(root) {
             root = (h + sqrt_discriminant) / a;
-            if ray_time.surrounds(root) {
+            if !ray_time.surrounds(root) {
                 return None;
             }
         }
