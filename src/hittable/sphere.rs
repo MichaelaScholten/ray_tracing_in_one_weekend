@@ -1,7 +1,5 @@
-use std::ops::RangeInclusive;
-
 use super::{HitRecord, Hittable};
-use crate::{ray::Ray, vec3::Point3};
+use crate::{interval::Interval, ray::Ray, vec3::Point3};
 
 pub struct Sphere {
     center: Point3,
@@ -15,7 +13,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_time: RangeInclusive<f64>) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_time: Interval) -> Option<HitRecord> {
         let origin_center = self.center - *ray.origin();
         let a = ray.direction().length_squared();
         let h = ray.direction().dot(&origin_center);
@@ -29,9 +27,9 @@ impl Hittable for Sphere {
 
         // Find the nearest root that lies in the acceptable range
         let mut root = (h - sqrt_discriminant) / a;
-        if root <= *ray_time.start() || *ray_time.end() <= root {
+        if !ray_time.surrounds(root) {
             root = (h + sqrt_discriminant) / a;
-            if root <= *ray_time.start() || *ray_time.end() <= root {
+            if ray_time.surrounds(root) {
                 return None;
             }
         }

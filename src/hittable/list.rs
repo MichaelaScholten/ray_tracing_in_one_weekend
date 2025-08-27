@@ -1,6 +1,4 @@
-use std::ops::RangeInclusive;
-
-use crate::ray::Ray;
+use crate::{interval::Interval, ray::Ray};
 
 use super::Hittable;
 
@@ -32,11 +30,11 @@ impl From<Vec<Box<dyn Hittable>>> for List {
 }
 
 impl Hittable for List {
-    fn hit(&self, ray: &Ray, mut ray_time: RangeInclusive<f64>) -> Option<super::HitRecord> {
+    fn hit(&self, ray: &Ray, mut ray_time: Interval) -> Option<super::HitRecord> {
         let mut record = None;
         for object in &self.objects {
-            if let Some(hit_record) = object.hit(ray, ray_time.clone()) {
-                ray_time = *ray_time.start()..=hit_record.time;
+            if let Some(hit_record) = object.hit(ray, ray_time) {
+                ray_time = ray_time.with_max(hit_record.time);
                 record = Some(hit_record);
             }
         }

@@ -1,6 +1,5 @@
-use std::ops::RangeInclusive;
-
 use crate::{
+    interval::Interval,
     ray::Ray,
     vec3::{Point3, Vec3},
 };
@@ -51,5 +50,5 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_time: RangeInclusive<f64>) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, ray_time: Interval) -> Option<HitRecord>;
 }

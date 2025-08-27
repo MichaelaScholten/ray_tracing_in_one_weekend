@@ -7,12 +7,14 @@ use std::{
 use crate::{
     color::{Color, write_color},
     hittable::{Hittable, list::List as HittableList, sphere::Sphere},
+    interval::Interval,
     ray::Ray,
     vec3::{Point3, Vec3},
 };
 
 pub mod color;
 pub mod hittable;
+pub mod interval;
 pub mod ray;
 pub mod vec3;
 
@@ -35,7 +37,7 @@ const VIEWPORT_U: Vec3 = Vec3::new([VIEWPORT_WIDTH, 0.0, 0.0]);
 const VIEWPORT_V: Vec3 = Vec3::new([0.0, -VIEWPORT_HEIGHT, 0.0]);
 
 fn ray_color(ray: &Ray, world: &HittableList) -> Color {
-    if let Some(record) = world.hit(ray, 0.0..=f64::INFINITY) {
+    if let Some(record) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
         return 0.5 * (*record.normal() + Color::new([1.0; 3]));
     }
     let unit_direction = ray.direction().unit_vector();
