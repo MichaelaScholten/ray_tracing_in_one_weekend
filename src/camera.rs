@@ -20,16 +20,17 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: u8,
     pixel_samples_scale: f64,
+    max_depth: u8,
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        Self::new(1.0, 100, 10)
+        Self::new(1.0, 100, 10, 10)
     }
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u8) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u8, max_depth: u8) -> Self {
         let mut image_height = (image_width as f64 / aspect_ratio) as u32;
         if image_height < 1 {
             image_height = 1;
@@ -63,6 +64,7 @@ impl Camera {
             pixel_delta_v,
             samples_per_pixel,
             pixel_samples_scale: 1.0 / f64::from(samples_per_pixel),
+            max_depth,
         }
     }
 
@@ -85,10 +87,13 @@ impl Camera {
         Ray::new(ray_origin, ray_direction)
     }
 
-    fn ray_color(ray: &Ray, world: &HittableList) -> Color {
-        if let Some(record) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
+    fn ray_color(ray: &Ray, world: &HittableList, depth: u8) -> Color {
+        if depth == 0 {
+            return Color::default();
+        }
+        if let Some(record) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
             let direction = Vec3::random_on_hemisphere(record.normal());
-            return 0.5 * Self::ray_color(&Ray::new(*record.point(), direction), world);
+            return 0.5 * Self::ray_color(&Ray::new(*record.point(), direction), world, depth - 1);
         }
         let unit_direction = ray.direction().unit_vector();
         let a = 0.5 * (unit_direction.y() + 1.0);
@@ -101,7 +106,7 @@ impl Camera {
                 eprint!("{:02}%\r", y * 100 / self.image_height);
             }
             let pixel_color = (0..self.samples_per_pixel)
-                .map(|_| Self::ray_color(&self.get_ray(x, y), world))
+                .map(|_| Self::ray_color(&self.get_ray(x, y), world, self.max_depth))
                 .sum::<Color>()
                 * self.pixel_samples_scale;
             Rgb::from(pixel_color)
