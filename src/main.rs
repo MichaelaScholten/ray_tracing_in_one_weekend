@@ -50,7 +50,7 @@ fn main() {
         let world = HittableList::from(world);
 
         // Create the camera
-        let camera = Camera::new(16.0 / 9.0, 1024, 128, 50);
+        let camera = Camera::new(16.0 / 9.0, 512, 128, 50);
 
         // Use the camera to make a picture of the world
         camera.render(&world);
