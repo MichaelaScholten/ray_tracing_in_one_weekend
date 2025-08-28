@@ -4,7 +4,7 @@ use crate::{
     camera::Camera,
     color::Color,
     hittable::{Hittable, list::List as HittableList, sphere::Sphere},
-    material::{lambertian::Lambertian, metal::Metal},
+    material::{dielectric::Dielectric, lambertian::Lambertian, metal::Metal},
     vec3::Point3,
 };
 
@@ -38,7 +38,7 @@ fn main() {
             Box::new(Sphere::new(
                 Point3::new([-1.0, 0.0, -1.0]),
                 0.5,
-                Arc::new(Metal::new(Color::new([0.8; 3]), 0.3)),
+                Arc::new(Dielectric::new(1.5)),
             )),
             // Right
             Box::new(Sphere::new(
