@@ -87,13 +87,19 @@ impl Camera {
         Ray::new(ray_origin, ray_direction)
     }
 
-    fn ray_color(ray: &Ray, world: &HittableList, depth: u8) -> Color {
+    fn ray_color(ray: &Ray, world: &HittableList, depth: u8, gamma_correction: f64) -> Color {
         if depth == 0 {
             return Color::default();
         }
         if let Some(record) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
             let direction = *record.normal() + Vec3::random_unit_vector();
-            return 0.5 * Self::ray_color(&Ray::new(*record.point(), direction), world, depth - 1);
+            return gamma_correction
+                * Self::ray_color(
+                    &Ray::new(*record.point(), direction),
+                    world,
+                    depth - 1,
+                    gamma_correction,
+                );
         }
         let unit_direction = ray.direction().unit_vector();
         let a = 0.5 * (unit_direction.y() + 1.0);
@@ -106,7 +112,14 @@ impl Camera {
                 eprint!("{:02}%\r", y * 100 / self.image_height);
             }
             let pixel_color = (0..self.samples_per_pixel)
-                .map(|_| Self::ray_color(&self.get_ray(x, y), world, self.max_depth))
+                .map(|_| {
+                    Self::ray_color(
+                        &self.get_ray(x, y),
+                        world,
+                        self.max_depth,
+                        (x as f64 / self.image_width as f64 * 5.0).floor() / 5.0,
+                    )
+                })
                 .sum::<Color>()
                 * self.pixel_samples_scale;
             Rgb::from(pixel_color)
