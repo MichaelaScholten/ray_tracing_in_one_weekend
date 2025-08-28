@@ -1,0 +1,8 @@
+use crate::{color::Color, hittable::HitRecord, ray::Ray};
+
+pub mod lambertian;
+pub mod metal;
+
+pub trait Material {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
+}
