@@ -4,11 +4,11 @@ use super::Hittable;
 
 #[derive(Default)]
 pub struct List {
-    objects: Vec<Box<dyn Hittable>>,
+    objects: Vec<Box<dyn Hittable + Sync>>,
 }
 
 impl List {
-    pub fn new(object: Box<dyn Hittable>) -> Self {
+    pub fn new(object: Box<dyn Hittable + Sync>) -> Self {
         Self {
             objects: vec![object],
         }
@@ -18,13 +18,13 @@ impl List {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
+    pub fn add(&mut self, object: Box<dyn Hittable + Sync>) {
         self.objects.push(object);
     }
 }
 
-impl From<Vec<Box<dyn Hittable>>> for List {
-    fn from(value: Vec<Box<dyn Hittable>>) -> Self {
+impl From<Vec<Box<dyn Hittable + Sync>>> for List {
+    fn from(value: Vec<Box<dyn Hittable + Sync>>) -> Self {
         Self { objects: value }
     }
 }

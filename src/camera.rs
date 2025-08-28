@@ -1,12 +1,10 @@
-use std::{
-    array,
-    io::{BufWriter, Write as _, stdout},
-};
+use std::array;
 
+use image::{ImageBuffer, Rgb};
 use rand::random;
 
 use crate::{
-    color::{Color, write_color},
+    color::Color,
     hittable::{Hittable as _, list::List as HittableList},
     interval::Interval,
     ray::Ray,
@@ -14,8 +12,8 @@ use crate::{
 };
 
 pub struct Camera {
-    image_width: usize,
-    image_height: usize,
+    image_width: u32,
+    image_height: u32,
     center: Point3,
     pixel_origin_location: Point3,
     pixel_delta_u: Vec3,
@@ -31,8 +29,8 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: usize, samples_per_pixel: u8) -> Self {
-        let mut image_height = (image_width as f64 / aspect_ratio) as usize;
+    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u8) -> Self {
+        let mut image_height = (image_width as f64 / aspect_ratio) as u32;
         if image_height < 1 {
             image_height = 1;
         }
@@ -72,7 +70,7 @@ impl Camera {
         Vec3::new([random::<f64>() - 0.5, random::<f64>() - 0.5, 0.0])
     }
 
-    fn get_ray(&self, x: usize, y: usize) -> Ray {
+    fn get_ray(&self, x: u32, y: u32) -> Ray {
         // Construct a camera ray originating from the origin and directed at randomly sampled
         // point around the pixel location x, y.
 
@@ -89,7 +87,8 @@ impl Camera {
 
     fn ray_color(ray: &Ray, world: &HittableList) -> Color {
         if let Some(record) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
-            return 0.5 * (*record.normal() + Color::new([1.0; 3]));
+            let direction = Vec3::random_on_hemisphere(record.normal());
+            return 0.5 * Self::ray_color(&Ray::new(*record.point(), direction), world);
         }
         let unit_direction = ray.direction().unit_vector();
         let a = 0.5 * (unit_direction.y() + 1.0);
@@ -97,17 +96,17 @@ impl Camera {
     }
 
     pub fn render(&self, world: &HittableList) {
-        let mut out = BufWriter::new(stdout().lock());
-        writeln!(out, "P3\n{} {}\n255\n", self.image_width, self.image_height).unwrap();
-        for y in 0..self.image_height {
-            eprint!("{:02}%\r", y * 100 / self.image_height);
-            for x in 0..self.image_width {
-                let pixel_color = (0..self.samples_per_pixel)
-                    .map(|_| Self::ray_color(&self.get_ray(x, y), world))
-                    .sum::<Color>()
-                    * self.pixel_samples_scale;
-                write_color(&mut out, &pixel_color);
+        ImageBuffer::from_par_fn(self.image_width, self.image_height, |x, y| {
+            if x == 0 {
+                eprint!("{:02}%\r", y * 100 / self.image_height);
             }
-        }
+            let pixel_color = (0..self.samples_per_pixel)
+                .map(|_| Self::ray_color(&self.get_ray(x, y), world))
+                .sum::<Color>()
+                * self.pixel_samples_scale;
+            Rgb::from(pixel_color)
+        })
+        .save("image.png")
+        .unwrap();
     }
 }

@@ -18,7 +18,7 @@ fn main() {
 
     {
         // Create the world
-        let world: Vec<Box<dyn Hittable>> = vec![
+        let world: Vec<Box<dyn Hittable + Sync>> = vec![
             Box::new(Sphere::new(Point3::new([0.0, 0.0, -1.0]), 0.5)),
             Box::new(Sphere::new(Point3::new([0.0, -100.5, -1.0]), 100.0)),
         ];
