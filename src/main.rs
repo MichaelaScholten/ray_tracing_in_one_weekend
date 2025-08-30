@@ -85,7 +85,7 @@ fn main() {
     let camera = Camera::new(
         16.0 / 9.0,
         1920,
-        255,
+        500,
         50,
         20.0,
         Point3::new([13.0, 2.0, 3.0]),

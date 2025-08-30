@@ -35,7 +35,7 @@ pub struct Camera {
     pixel_delta_v: Vec3,
 
     /// Count of random samples for each pixel
-    samples_per_pixel: u8,
+    samples_per_pixel: u16,
 
     /// Color scale factor for a sum of pixels
     pixel_samples_scale: f64,
@@ -92,7 +92,7 @@ impl Camera {
     pub fn new(
         aspect_ratio: f64,
         image_width: u32,
-        samples_per_pixel: u8,
+        samples_per_pixel: u16,
         max_depth: u8,
         vfov: f64,
         look_from: Point3,
