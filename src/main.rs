@@ -38,7 +38,13 @@ fn main() {
             Box::new(Sphere::new(
                 Point3::new([-1.0, 0.0, -1.0]),
                 0.5,
-                Arc::new(Dielectric::new(1.0 / 1.33)),
+                Arc::new(Dielectric::new(1.5)),
+            )),
+            // Bubble
+            Box::new(Sphere::new(
+                Point3::new([-1.0, 0.0, -1.0]),
+                0.4,
+                Arc::new(Dielectric::new(1.0 / 1.5)),
             )),
             // Right
             Box::new(Sphere::new(
