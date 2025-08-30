@@ -209,6 +209,14 @@ impl Vec3 {
         let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * n;
         r_out_perp + r_out_parallel
     }
+
+    pub const fn cross(&self, other: &Self) -> Vec3 {
+        Self([
+            self.0[1] * other.0[2] - self.0[2] * other.0[1],
+            self.0[2] * other.0[0] - self.0[0] * other.0[2],
+            self.0[0] * other.0[1] - self.0[1] * other.0[0],
+        ])
+    }
 }
 
 pub type Point3 = Vec3;
