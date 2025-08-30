@@ -1,4 +1,7 @@
-use std::array;
+use std::{
+    array,
+    sync::atomic::{AtomicU32, Ordering},
+};
 
 use image::{ImageBuffer, Rgb};
 use rand::random;
@@ -200,9 +203,13 @@ impl Camera {
     }
 
     pub fn render(&self, world: &HittableList) {
+        let progress = AtomicU32::new(0);
         ImageBuffer::from_par_fn(self.image_width, self.image_height, |x, y| {
             if x == 0 {
-                eprint!("{:02}%\r", y * 100 / self.image_height);
+                eprint!(
+                    "{:02}%\r",
+                    progress.fetch_add(1, Ordering::Relaxed) * 100 / self.image_height
+                );
             }
             let pixel_color = (0..self.samples_per_pixel)
                 .map(|_| Self::ray_color(&self.get_ray(x, y), world, self.max_depth))
