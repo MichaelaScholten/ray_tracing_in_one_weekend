@@ -154,6 +154,15 @@ impl Vec3 {
         }
     }
 
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let point = Vec3::new([random_range(-1.0..1.0), random_range(-1.0..1.0), 0.0]);
+            if point.length_squared() < 1.0 {
+                return point;
+            }
+        }
+    }
+
     pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
         let on_unit_sphere = Self::random_unit_vector();
 
