@@ -12,25 +12,48 @@ use crate::{
 };
 
 pub struct Camera {
+    /// Rendered image width in pixel count
     image_width: u32,
+
+    /// Rendered image height
     image_height: u32,
+
+    /// Camera center
     center: Point3,
+
+    /// Location of pixel (0, 0)
     pixel_origin_location: Point3,
+
+    /// Offset to pixel to the right
     pixel_delta_u: Vec3,
+
+    /// Offset to pixel below
     pixel_delta_v: Vec3,
+
+    /// Count of random samples for each pixel
     samples_per_pixel: u8,
+
+    /// Color scale factor for a sum of pixels
     pixel_samples_scale: f64,
+
+    /// Maximum number of ray bounces into scene
     max_depth: u8,
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        Self::new(1.0, 100, 10, 10)
+        Self::new(1.0, 100, 10, 10, 90.0)
     }
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u8, max_depth: u8) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u32,
+        samples_per_pixel: u8,
+        max_depth: u8,
+        vfov: f64,
+    ) -> Self {
         let mut image_height = (image_width as f64 / aspect_ratio) as u32;
         if image_height < 1 {
             image_height = 1;
@@ -40,7 +63,9 @@ impl Camera {
 
         // Determine viewport dimensions
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges
